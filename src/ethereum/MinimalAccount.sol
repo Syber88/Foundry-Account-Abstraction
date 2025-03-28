@@ -16,6 +16,7 @@ contract MinimalAccount is IAccount, Ownable {
         returns (uint256 validationData)
     {
         validationData = _validateSignature(userOp, userOpHash);
+        _payPrefund(missingAccountFunds);
     }
 
     function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
@@ -29,5 +30,12 @@ contract MinimalAccount is IAccount, Ownable {
             return SIG_VALIDATION_FAILED;
         }
         return SIG_VALIDATION_SUCCESS;
+    }
+
+    function _payPrefund(uint256 missingAccoundFunds) internal {
+        if (missingAccoundFunds != 0) {
+            (bool success, ) = payable(msg.sender).call{value: missingAccoundFunds, gas: type(uint256).max}("");
+            (success);
+        }
     }
 }
