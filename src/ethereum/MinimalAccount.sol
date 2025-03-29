@@ -19,8 +19,8 @@ contract MinimalAccount is IAccount, Ownable {
     modifier requireFrontEntryPoint() {
         if (msg.sender != address(i_entryPoint)) {
             revert MinimalAccount__NotFromEntryPoint();
-            _;
         }
+        _;
     }
 
     modifier requireFromEntryPointOrOwner() {
@@ -35,11 +35,10 @@ contract MinimalAccount is IAccount, Ownable {
     }
 
     function execute(address dest, uint256 value, bytes calldata functionData) external {
-        (bool success, bytes memory result ) = dest.call{value: value}(functionData);
+        (bool success, bytes memory result) = dest.call{value: value}(functionData);
         if (!success) {
             revert MinimalAccount__CallFailed(result);
         }
-
     }
 
     function validateUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
