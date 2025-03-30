@@ -5,18 +5,25 @@ import {Script} from "forge-std/Script.sol";
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
 
 contract SendPackerUserOp is Script {
+    using MessageHashUtils for bytes32;
     function run() public {}
 
     function generateSignedUserOperation(bytes memory callData, HelperConfig.NetworkConfig memory config)
-        public
+        public view
         returns (PackedUserOperation memory)
     {
         uint256 nonce = vm.getNonce(config.account);
-        PackedUserOperation memory unsignerUserOp = _generateUnsignedUserOperation(callData, config.account, nonce);
+        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, config.account, nonce);
 
-        bytes32 userOpHash = config.entryPoint;
+        bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
+        bytes32 digest = userOpHash.toEthSignedMessageHash();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(config.account, digest);
+        userOp.signature = abi.encodePacked(r, s, v);
+        return userOp;
     }
 
     function _generateUnsignedUserOperation(bytes memory callData, address sender, uint256 nonce)
