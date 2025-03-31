@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IAccount} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
-import {Transaction} from
-    "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
+// zkSync Era Imports
+import {
+    IAccount,
+    ACCOUNT_VALIDATION_SUCCESS_MAGIC
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/IAccount.sol";
+import {
+    Transaction,
+    MemoryTransactionHelper
+} from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/MemoryTransactionHelper.sol";
 import {SystemContractsCaller} from
     "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/SystemContractsCaller.sol";
 import {
@@ -14,11 +20,15 @@ import {
 import {INonceHolder} from "lib/foundry-era-contracts/src/system-contracts/contracts/interfaces/INonceHolder.sol";
 import {Utils} from "lib/foundry-era-contracts/src/system-contracts/contracts/libraries/Utils.sol";
 
+// OZ Imports
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ZkMinimalAccount is IAccount {
+    using MemoryTransactionHelper for Transaction;
+
+    error ZkMinimalAccount__NotEnoughBalance();
     /**
      *
      * @notice must increase the nonce
@@ -36,6 +46,11 @@ contract ZkMinimalAccount is IAccount {
             0,
             abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
         );
+
+        uint256 totalRequiredBalance = _transaction.totalRequiredBalance(); 
+        if (totalRequiredBalance > address(this).balance) {
+            revert ZkMinimalAccount__NotEnoughBalance();
+        }
     }
 
     function executeTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
