@@ -25,10 +25,13 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ZkMinimalAccount is IAccount {
+contract ZkMinimalAccount is IAccount, Ownable {
     using MemoryTransactionHelper for Transaction;
 
     error ZkMinimalAccount__NotEnoughBalance();
+
+    constructor() Ownable(msg.sender) {} 
+
     /**
      *
      * @notice must increase the nonce
@@ -51,6 +54,18 @@ contract ZkMinimalAccount is IAccount {
         if (totalRequiredBalance > address(this).balance) {
             revert ZkMinimalAccount__NotEnoughBalance();
         }
+
+        bytes32 txHash = _transaction.encodeHash();
+        // bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
+        address signer = ECDSA.recover(txHash, _transaction.signature);
+        bool isValidSigner = signer == owner();
+        if(isValidSigner) {
+            magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
+
+        } else {
+            magic = bytes4(0);
+        }
+        return magic;
     }
 
     function executeTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
