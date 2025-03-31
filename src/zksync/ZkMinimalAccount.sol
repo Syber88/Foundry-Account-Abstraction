@@ -29,6 +29,14 @@ contract ZkMinimalAccount is IAccount, Ownable {
     using MemoryTransactionHelper for Transaction;
 
     error ZkMinimalAccount__NotEnoughBalance();
+    error ZkMinimalAccount__NotFromBootLoader();
+
+    modifier requireFromBootLoader() {
+        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
+            revert ZkMinimalAccount__NotFromBootLoader();
+        }
+        _;
+    }
 
     constructor() Ownable(msg.sender) {} 
 
@@ -40,6 +48,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
      */
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
+        requireFromBootLoader
         payable
         returns (bytes4 magic)
     {
