@@ -106,7 +106,7 @@ contract MinimalAccountTest is Test {
         vm.prank(randomUser);
 
         IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(randomUser));
-        
+
         assertEq(usdc.balanceOf(address(minimalAccount)), AMOUNT);
     }
 }
