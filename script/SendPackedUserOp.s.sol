@@ -8,7 +8,7 @@ import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPo
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 
-contract SendPackerUserOp is Script {
+contract SendPackedUserOp is Script {
     using MessageHashUtils for bytes32;
     function run() public {}
 
