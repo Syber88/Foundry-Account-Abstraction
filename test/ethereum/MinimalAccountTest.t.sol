@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {MinimalAccount} from "../../src/ethereum/MinimalAccount.sol";
 import {DeployMinimal} from "../../script/DeployMinimal.s.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
@@ -102,6 +102,15 @@ contract MinimalAccountTest is Test {
 
         vm.deal(address(minimalAccount), ACCOUNT_FUNDS);
         vm.prank(randomUser);
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, randomUser);
+
+
+        
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(randomUser));
+
+        // console2.log("account funds: ", minimalAccount.balance);
+        // console2.log("entrypoint funds: ", IEntryPoint(helperConfig.getConfig().entryPoint.balance);
+
+        assertEq(usdc.balanceOf(address(minimalAccount)), AMOUNT);
+
     }
 }
