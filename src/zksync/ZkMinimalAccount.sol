@@ -38,7 +38,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
         _;
     }
 
-    constructor() Ownable(msg.sender) {} 
+    constructor() Ownable(msg.sender) {}
 
     /**
      *
@@ -48,8 +48,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
      */
     function validateTransaction(bytes32 _txHash, bytes32 _suggestedSignedHash, Transaction memory _transaction)
         external
-        requireFromBootLoader
         payable
+        requireFromBootLoader
         returns (bytes4 magic)
     {
         SystemContractsCaller.systemCallWithPropagatedRevert(
@@ -59,7 +59,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
             abi.encodeCall(INonceHolder.incrementMinNonceIfEquals, (_transaction.nonce))
         );
 
-        uint256 totalRequiredBalance = _transaction.totalRequiredBalance(); 
+        uint256 totalRequiredBalance = _transaction.totalRequiredBalance();
         if (totalRequiredBalance > address(this).balance) {
             revert ZkMinimalAccount__NotEnoughBalance();
         }
@@ -68,9 +68,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
         // bytes32 convertedHash = MessageHashUtils.toEthSignedMessageHash(txHash);
         address signer = ECDSA.recover(txHash, _transaction.signature);
         bool isValidSigner = signer == owner();
-        if(isValidSigner) {
+        if (isValidSigner) {
             magic = ACCOUNT_VALIDATION_SUCCESS_MAGIC;
-
         } else {
             magic = bytes4(0);
         }
