@@ -10,8 +10,6 @@ import {SendPackedUserOp, PackedUserOperation} from "../../script/SendPackedUser
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-
-
 contract MinimalAccountTest is Test {
     using MessageHashUtils for bytes32;
 
@@ -59,13 +57,14 @@ contract MinimalAccountTest is Test {
         address dest = address(usdc);
         uint256 value = 0;
         bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(minimalAccount), AMOUNT);
-        bytes memory executeCallData = abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
-        PackedUserOperation packedUserOp = sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
+        bytes memory executeCallData =
+            abi.encodeWithSelector(MinimalAccount.execute.selector, dest, value, functionData);
+        PackedUserOperation packedUserOp =
+            sendPackedUserOp.generateSignedUserOperation(executeCallData, helperConfig.getConfig());
         bytes32 userOperationHash = IEntryPoint(helperConfig.getConfig().entryPoint).getUserOpHash(packedUserOp);
 
         address actualSigner = ECDSA.recover(userOperationHash.toEthSignedMessageHash(), userOperationHash.signature);
 
         assertEq(actualSigner, minimalAccount.owner());
-        
     }
 }

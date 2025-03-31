@@ -7,13 +7,14 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-
 contract SendPackedUserOp is Script {
     using MessageHashUtils for bytes32;
+
     function run() public {}
 
     function generateSignedUserOperation(bytes memory callData, HelperConfig.NetworkConfig memory config)
-        public view
+        public
+        view
         returns (PackedUserOperation memory)
     {
         uint256 nonce = vm.getNonce(config.account);
