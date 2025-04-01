@@ -42,7 +42,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
     }
 
     modifier requireFromBootLoaderOrOwner() {
-        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS && msg.sender != owner())  {
+        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS && msg.sender != owner()) {
             revert ZkMinimalAccount__NotFromBootLoaderOrOwner();
         }
         _;
@@ -88,8 +88,8 @@ contract ZkMinimalAccount is IAccount, Ownable {
 
     function executeTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
         external
-        requireFromBootLoaderOrOwner
         payable
+        requireFromBootLoaderOrOwner
     {
         address to = address(uint160(_transaction.to));
         uint128 value = Utils.safeCastToU128(_transaction.value);
@@ -121,7 +121,6 @@ contract ZkMinimalAccount is IAccount, Ownable {
             revert ZkMinimalAccount__FailedToPay();
         }
     }
-    
 
     function prepareForPaymaster(bytes32, /*_txHash*/ bytes32, /*_possibleSignedHash*/ Transaction memory _transaction)
         external
