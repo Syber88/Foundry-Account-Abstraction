@@ -26,9 +26,9 @@ contract ZkMinimalAccountTest is Test, ZkSyncChainChecker {
     ZkMinimalAccount minimalAccount;
     ERC20Mock usdc;
     bytes4 constant EIP1271_SUCCESS_RETURN_VALUE = 0x1626ba7e;
+    bytes32 constant EMPTY_BYTES32 = bytes32(0);
 
     uint256 constant AMOUNT = 1e18;
-    bytes32 constant EMPTY_BYTES32 = bytes32(0);
     address constant ANVIL_DEFAULT_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     function setUp() public {
@@ -41,9 +41,14 @@ contract ZkMinimalAccountTest is Test, ZkSyncChainChecker {
     function testZkOwnerCanExecuteCommands() public {
         address dest = address(usdc);
         uint256 value = 0;
-        bytes memory functIOnData = abi.encodeWithSelector(ERC20Mock.min.selector, address(minimalAccount), ACCOUNT);
+        bytes memory functionData = abi.encodeWithSelector(ERC20Mock.mint.selector, address(minimalAccount), AMOUNT);
 
-        Transation memory Transaction = _createUnsignedTransaction(minimalAccount.owner(), 113, dest, value, functIOnData)
+        Transaction memory transaction = _createUnsignedTransaction(minimalAccount.owner(), 113, dest, value, functionData);
+
+        vm.prank(minimalAccount.owner());
+        minimalAccount.executeTransaction(EMPTY_BYTES32, EMPTY_BYTES32, transaction);
+
+        assertEq(usdc.balanceOf(address(minimalAccount)), AMOUNT);
     }
 
     function _createUnsignedTransaction(address from, uint8 transactionType, address to, uint256 value, bytes memory data) internal view returns(Transaction memory) {
@@ -55,6 +60,7 @@ contract ZkMinimalAccountTest is Test, ZkSyncChainChecker {
             to: uint256(uint160(to)),
             gasLimit: 16777216,
             gasPerPubdataByteLimit: 16777216,
+            maxPriorityFeePerGas: 16777216,
             maxFeePerGas: 16777216,
             paymaster: 0, 
             nonce: nonce,
@@ -62,7 +68,9 @@ contract ZkMinimalAccountTest is Test, ZkSyncChainChecker {
             reserved: [uint256(0),uint256(0),uint256(0),uint256(0)], 
             data: data, 
             signature: hex"", 
-            factoryDeps: factoryDeps
+            factoryDeps: factoryDeps,
+            paymasterInput: hex"",
+            reservedDynamic: hex""
         });
     }
 }
