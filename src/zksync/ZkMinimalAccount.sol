@@ -31,10 +31,18 @@ contract ZkMinimalAccount is IAccount, Ownable {
     error ZkMinimalAccount__NotEnoughBalance();
     error ZkMinimalAccount__NotFromBootLoader();
     error ZkMinimalAccount__ExecutionFailed();
+    error ZkMinimalAccount__NotFromBootLoaderOrOwner();
 
     modifier requireFromBootLoader() {
         if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
             revert ZkMinimalAccount__NotFromBootLoader();
+        }
+        _;
+    }
+
+    modifier requireFromBootLoaderOrOwner() {
+        if (msg.sender != BOOTLOADER_FORMAL_ADDRESS && msg.sender != owner())  {
+            revert ZkMinimalAccount__NotFromBootLoaderOrOwner();
         }
         _;
     }
@@ -47,7 +55,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
      * @notice must validate the transaction (chekc the owner signed the transaction)
      * @notice also check to see if we hace enough money in our account
      */
-    function validateTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction memory _transaction)
+    function validateTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
         external
         payable
         requireFromBootLoader
@@ -77,15 +85,16 @@ contract ZkMinimalAccount is IAccount, Ownable {
         return magic;
     }
 
-    function executeTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction memory _transaction)
+    function executeTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
         external
+        requireFromBootLoaderOrOwner
         payable
     {
         address to = address(uint160(_transaction.to));
         uint128 value = Utils.safeCastToU128(_transaction.value);
         bytes memory data = _transaction.data;
 
-        if (to == address(DEPLOYER_SYSTEM_CONTRACT)){
+        if (to == address(DEPLOYER_SYSTEM_CONTRACT)) {
             uint32 gas = Utils.safeCastToU32(gasleft());
             SystemContractsCaller.systemCallWithPropagatedRevert(gas, to, value, data);
         } else {
@@ -97,19 +106,17 @@ contract ZkMinimalAccount is IAccount, Ownable {
             if (!success) {
                 revert ZkMinimalAccount__ExecutionFailed();
             }
-
         }
-
     }
 
     function executeTransactionFromOutside(Transaction calldata _transaction) external payable {}
 
-    function payForTransaction(bytes32 /*_txHash*/, bytes32 /*_suggestedSignedHash*/, Transaction memory _transaction)
+    function payForTransaction(bytes32, /*_txHash*/ bytes32, /*_suggestedSignedHash*/ Transaction memory _transaction)
         external
         payable
     {}
 
-    function prepareForPaymaster(bytes32 /*_txHash*/, bytes32 /*_possibleSignedHash*/, Transaction memory _transaction)
+    function prepareForPaymaster(bytes32, /*_txHash*/ bytes32, /*_possibleSignedHash*/ Transaction memory _transaction)
         external
         payable
     {}
