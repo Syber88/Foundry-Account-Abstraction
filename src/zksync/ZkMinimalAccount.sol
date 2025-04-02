@@ -33,6 +33,7 @@ contract ZkMinimalAccount is IAccount, Ownable {
     error ZkMinimalAccount__ExecutionFailed();
     error ZkMinimalAccount__NotFromBootLoaderOrOwner();
     error ZkMinimalAccount__FailedToPay();
+    error ZkMinimalAccount__InvalidSignature();
 
     modifier requireFromBootLoader() {
         if (msg.sender != BOOTLOADER_FORMAL_ADDRESS) {
@@ -76,7 +77,10 @@ contract ZkMinimalAccount is IAccount, Ownable {
     }
 
     function executeTransactionFromOutside(Transaction calldata _transaction) external payable {
-        _validateTransaction(_transaction);
+        bytes4 magic = _validateTransaction(_transaction);
+        if (magic != ACCOUNT_VALIDATION_SUCCESS_MAGIC){
+            revert ZkMinimalAccount__InvalidSignature();
+        }
         _executeTransaction(_transaction);
     }
 
